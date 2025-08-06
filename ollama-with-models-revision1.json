@@ -1,0 +1,139 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:eu-central-1:362695547144:task-definition/ollama-with-models:1",
+    "containerDefinitions": [
+        {
+            "name": "ollama",
+            "image": "362695547144.dkr.ecr.eu-central-1.amazonaws.com/training/llm:latest",
+            "cpu": 4096,
+            "memory": 16384,
+            "memoryReservation": 14336,
+            "portMappings": [
+                {
+                    "name": "ollama",
+                    "containerPort": 11434,
+                    "hostPort": 11434,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": []
+        },
+        {
+            "name": "anythingllm",
+            "image": "mintplexlabs/anythingllm:latest",
+            "cpu": 2048,
+            "memory": 4096,
+            "memoryReservation": 3072,
+            "portMappings": [
+                {
+                    "name": "http",
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "EMBEDDING_BASE_PATH",
+                    "value": "http://ollama:11434"
+                },
+                {
+                    "name": "OLLAMA_MODEL_PREF",
+                    "value": "llama3"
+                },
+                {
+                    "name": "OLLAMA_MODEL_TOKEN_LIMIT",
+                    "value": "4096"
+                },
+                {
+                    "name": "OLLAMA_BASE_PATH",
+                    "value": "http://ollama:11434"
+                },
+                {
+                    "name": "STORAGE_DIR",
+                    "value": "/app/server/storage"
+                },
+                {
+                    "name": "EMBEDDING_MODEL_PREF",
+                    "value": "nomic-embed-text"
+                },
+                {
+                    "name": "LLM_PROVIDER",
+                    "value": "ollama"
+                },
+                {
+                    "name": "EMBEDDING_ENGINE",
+                    "value": "ollama"
+                },
+                {
+                    "name": "EMBEDDING_MODEL_MAX_CHUNK_LENGTH",
+                    "value": "8192"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "storage",
+                    "containerPath": "/app/server/storage",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "systemControls": []
+        }
+    ],
+    "family": "ollama-with-models",
+    "executionRoleArn": "arn:aws:iam::362695547144:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [
+        {
+            "name": "storage",
+            "host": {}
+        }
+    ],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+        },
+        {
+            "name": "ecs.capability.increased-task-cpu-limit"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "8192",
+    "memory": "20480",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2025-08-05T16:20:30.624Z",
+    "registeredBy": "arn:aws:iam::362695547144:root",
+    "enableFaultInjection": false,
+    "tags": []
+}

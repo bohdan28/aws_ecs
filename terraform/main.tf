@@ -13,17 +13,6 @@ module "vpc" {
   single_nat_gateway = true
 }
 
-# EFS for AnythingLLM persistent storage
-resource "aws_efs_file_system" "anythingllm" {
-  creation_token = "anythingllm-storage"
-  lifecycle_policy {
-    transition_to_ia = "AFTER_30_DAYS"
-  }
-  tags = {
-    Name = "anythingllm-storage"
-  }
-}
-
 # Application Load Balancer for public access to AnythingLLM
 resource "aws_lb" "anythingllm" {
   name               = "anythingllm-alb"

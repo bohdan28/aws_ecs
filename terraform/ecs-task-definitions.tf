@@ -88,7 +88,7 @@ resource "aws_ecs_task_definition" "anythingllm" {
       root_directory     = "/"
       transit_encryption = "ENABLED"
       authorization_config {
-        access_point_id = null
+        access_point_id = aws_efs_access_point.anythingllm-ap.id
         iam             = "DISABLED"
       }
     }
@@ -134,4 +134,36 @@ resource "aws_efs_mount_target" "anythingllm_b" {
   file_system_id  = aws_efs_file_system.anythingllm.id
   subnet_id       = module.vpc.private_subnets[1]
   security_groups = [aws_security_group.efs.id]
+}
+# EFS for AnythingLLM persistent storage
+resource "aws_efs_file_system" "anythingllm" {
+  creation_token = "anythingllm-storage"
+  lifecycle_policy {
+    transition_to_ia = "AFTER_30_DAYS"
+  }
+  tags = {
+    Name = "anythingllm-storage"
+  }
+}
+
+resource "aws_efs_access_point" "anythingllm-ap" {
+  file_system_id = aws_efs_file_system.anythingllm.id
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+
+  root_directory {
+    path = "/storage"
+    creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+
+  tags = {
+    Name = "anythingllm-access-point"
+  }
 }

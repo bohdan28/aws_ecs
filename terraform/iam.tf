@@ -17,3 +17,29 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   role       = aws_iam_role.ecs_task_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+resource "aws_iam_policy" "efs_access" {
+  name        = "ECSEFSAccessPolicy"
+  description = "Allow ECS tasks to access EFS"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:DescribeFileSystems",
+          "elasticfilesystem:DescribeMountTargets",
+          "elasticfilesystem:DescribeMountTargetSecurityGroups"
+        ]
+        Resource = "*" # Optional: replace with your EFS ARN
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_efs" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = aws_iam_policy.efs_access.arn
+}

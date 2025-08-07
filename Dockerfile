@@ -4,4 +4,5 @@ COPY /models /root/.ollama/models/
 
 EXPOSE 11434
 
-CMD ["ollama", "serve"]
+ENTRYPOINT ["/usr/bin/ollama"]
+CMD ["serve"]

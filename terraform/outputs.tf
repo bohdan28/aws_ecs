@@ -10,3 +10,7 @@ output "ecr_ollama_url" {
 output "ecr_anythingllm_url" {
   value = aws_ecr_repository.anythingllm.repository_url
 }
+
+output "anythingllm_alb_dns_name" {
+  value = aws_lb.anythingllm.dns_name  
+}

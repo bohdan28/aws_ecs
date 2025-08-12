@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "eu-central-1"
+  region = var.region
 }
 
 module "vpc" {
@@ -67,10 +67,28 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"] # AnythingLLM Web
   }
   ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Prometheus
+  }
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Grafana
+  }
+  ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # ALB HTTP
+  }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # cadvisor
   }
   egress {
     from_port   = 0
@@ -116,6 +134,30 @@ resource "aws_service_discovery_service" "ollama" {
 
 resource "aws_service_discovery_service" "anythingllm" {
   name = "anythingllm"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.llm.id
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}
+
+resource "aws_service_discovery_service" "prometheus" {
+  name = "prometheus"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.llm.id
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}
+
+resource "aws_service_discovery_service" "grafana" {
+  name = "grafana"
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.llm.id
     dns_records {

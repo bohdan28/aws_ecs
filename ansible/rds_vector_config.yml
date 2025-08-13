@@ -1,0 +1,5 @@
+- name: Enable pgvector extension on RDS
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - data_base_config

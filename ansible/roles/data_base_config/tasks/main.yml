@@ -1,0 +1,23 @@
+---
+# tasks/main.yml for data_base_config role
+- name: Install pip
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install psycopg2
+  ansible.builtin.pip:
+    name: psycopg2-binary
+    state: present
+  become: true
+
+- name: Install pgvector extension on RDS PostgreSQL
+  community.postgresql.postgresql_ext:
+    name: vector
+    db: "{{ db_name }}"
+    login_host: "{{ endpoint.split(':')[0] }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    state: present

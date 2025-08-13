@@ -12,5 +12,5 @@ output "ecr_anythingllm_url" {
 }
 
 output "anythingllm_alb_dns_name" {
-  value = aws_lb.anythingllm.dns_name  
+  value = aws_lb.anythingllm.dns_name
 }

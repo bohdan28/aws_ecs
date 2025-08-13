@@ -28,13 +28,13 @@ resource "aws_ecs_task_definition" "ollama" {
           awslogs-region        = "eu-central-1"
           awslogs-stream-prefix = "ecs"
         }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:11434 || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 1
-    }
+        healthCheck = {
+          command     = ["CMD-SHELL", "curl -f http://localhost:11434 || exit 1"]
+          interval    = 30
+          timeout     = 5
+          retries     = 3
+          startPeriod = 1
+        }
       }
     }
   ])
@@ -59,7 +59,7 @@ resource "aws_ecs_task_definition" "anythingllm" {
         { name = "DATABASE_URL", value = "postgresql://${var.master_username}:${var.master_password}@${aws_db_instance.postgres.endpoint}/${var.database_name}" },
         { name = "VECTOR_DB", value = "pgvector" },
         { name = "PGVECTOR_CONNECTION_STRING", value = "postgresql://${var.master_username}:${var.master_password}@${aws_db_instance.postgres.endpoint}/${var.database_name}" },
-        { name = "PGVECTOR_TABLE_NAME", value = "anythingllm_vectors"},
+        { name = "PGVECTOR_TABLE_NAME", value = "anythingllm_vectors" },
         { name = "STORAGE_DIR", value = "/app/server/storage" },
         { name = "JWT_SECRET", value = "REPLACE_WITH_SECRET" },
         { name = "LLM_PROVIDER", value = "ollama" },
@@ -95,7 +95,7 @@ resource "aws_ecs_task_definition" "anythingllm" {
         timeout     = 5
         retries     = 3
         startPeriod = 1
-    }
+      }
     }
   ])
 
@@ -207,7 +207,7 @@ resource "aws_efs_backup_policy" "prometheus" {
 
 resource "aws_efs_access_point" "prometheus" {
   file_system_id = aws_efs_file_system.prometheus.id
-    posix_user {
+  posix_user {
     gid = 1000
     uid = 1000
   }
@@ -245,12 +245,12 @@ resource "aws_ecs_task_definition" "prometheus" {
   task_role_arn            = aws_iam_role.ecs_task_execution.arn
 
   container_definitions = jsonencode([
-        # Init container to write prometheus.yml
+    # Init container to write prometheus.yml
     {
       name      = "init-config"
       image     = "public.ecr.aws/docker/library/busybox:latest"
       essential = false
-      command   = [
+      command = [
         "sh", "-c",
         <<-EOT
         cat <<EOF > /prometheus/prometheus.yml
@@ -284,12 +284,12 @@ resource "aws_ecs_task_definition" "prometheus" {
 
     # Prometheus container
     {
-      name      = "prometheus"
-      image     = "prom/prometheus:latest"
+      name         = "prometheus"
+      image        = "prom/prometheus:latest"
       portMappings = [{ containerPort = 9090, hostPort = 9090 }]
-      essential = true
-      environment = []
-      command   = [
+      essential    = true
+      environment  = []
+      command = [
         "--config.file=/prometheus/prometheus.yml",
         "--storage.tsdb.path=/prometheus"
       ]
@@ -314,9 +314,9 @@ resource "aws_ecs_task_definition" "prometheus" {
   volume {
     name = "prometheus-storage"
     efs_volume_configuration {
-      file_system_id          = aws_efs_file_system.prometheus.id
-      root_directory          = "/"
-      transit_encryption      = "ENABLED"
+      file_system_id     = aws_efs_file_system.prometheus.id
+      root_directory     = "/"
+      transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = aws_efs_access_point.prometheus.id
         iam             = "ENABLED"
@@ -337,11 +337,11 @@ resource "aws_ecs_task_definition" "grafana" {
 
   container_definitions = jsonencode([
     {
-      name      = "grafana"
-      image     = "grafana/grafana:latest"
+      name         = "grafana"
+      image        = "grafana/grafana:latest"
       portMappings = [{ containerPort = 3000, hostPort = 3000 }]
-      essential = true
-      environment = []
+      essential    = true
+      environment  = []
       logConfiguration = {
         logDriver = "awslogs"
         options = {

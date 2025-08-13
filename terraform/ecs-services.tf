@@ -19,7 +19,7 @@ resource "aws_ecs_service" "anythingllm" {
   name            = "anythingllm"
   cluster         = aws_ecs_cluster.llm.id
   task_definition = aws_ecs_task_definition.anythingllm.arn
-  desired_count   = 2
+  desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
     subnets          = module.vpc.private_subnets
@@ -65,10 +65,6 @@ resource "aws_ecs_service" "grafana" {
     assign_public_ip = true
   }
 }
-
-#####################################################################
-
-
 
 resource "aws_appautoscaling_target" "ecs" {
   max_capacity       = 5

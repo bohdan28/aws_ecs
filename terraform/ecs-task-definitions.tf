@@ -17,7 +17,7 @@ resource "aws_ecs_task_definition" "ollama" {
   container_definitions = jsonencode([
     {
       name         = "ollama"
-      image        = "362695547144.dkr.ecr.eu-central-1.amazonaws.com/training/llm:latest"
+      image        = var.ollama_image
       portMappings = [{ containerPort = 11434, hostPort = 11434 }]
       essential    = true
       environment  = []
@@ -28,21 +28,13 @@ resource "aws_ecs_task_definition" "ollama" {
           awslogs-region        = "eu-central-1"
           awslogs-stream-prefix = "ecs"
         }
-      }
-    },
-    {
-      name      = "cadvisor"
-      image     = "gcr.io/google-containers/cadvisor:latest"
-      portMappings = [{ containerPort = 8080, hostPort = 8080 }]
-      essential = false
-      environment = []
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = "/ecs/ollama"
-          awslogs-region        = "eu-central-1"
-          awslogs-stream-prefix = "ecs"
-        }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:11434 || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 1
+    }
       }
     }
   ])
@@ -60,7 +52,7 @@ resource "aws_ecs_task_definition" "anythingllm" {
   container_definitions = jsonencode([
     {
       name         = "anythingllm"
-      image        = "mintplexlabs/anythingllm:pg"
+      image        = vars.anythingllm_image
       portMappings = [{ containerPort = 3001, hostPort = 3001 }]
       essential    = true
       environment = [
@@ -104,21 +96,6 @@ resource "aws_ecs_task_definition" "anythingllm" {
         retries     = 3
         startPeriod = 1
     }
-    },
-    {
-      name      = "cadvisor"
-      image     = "gcr.io/google-containers/cadvisor:latest"
-      portMappings = [{ containerPort = 8080, hostPort = 8080 }]
-      essential = false
-      environment = []
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = "/ecs/anythingllm"
-          awslogs-region        = "eu-central-1"
-          awslogs-stream-prefix = "ecs"
-        }
-      }
     }
   ])
 
@@ -240,7 +217,7 @@ resource "aws_efs_access_point" "prometheus" {
     creation_info {
       owner_gid   = 1000
       owner_uid   = 1000
-      permissions = "755"
+      permissions = "777"
     }
   }
 }
@@ -271,12 +248,12 @@ resource "aws_ecs_task_definition" "prometheus" {
         # Init container to write prometheus.yml
     {
       name      = "init-config"
-      image     = "busybox"
+      image     = "public.ecr.aws/docker/library/busybox:latest"
       essential = false
       command   = [
         "sh", "-c",
         <<-EOT
-        cat <<EOF > /mnt/prometheus/prometheus.yml
+        cat <<EOF > /prometheus/prometheus.yml
         global:
           scrape_interval: 15s
         scrape_configs:
@@ -287,13 +264,22 @@ resource "aws_ecs_task_definition" "prometheus" {
             static_configs:
               - targets: ['ollama.llm.local:8080']
         EOF
+        echo "Prometheus configuration written to /prometheus/prometheus.yml"
         EOT
       ]
       mountPoints = [{
         sourceVolume  = "prometheus-storage"
-        containerPath = "etc/prometheus"
+        containerPath = "/prometheus"
         readOnly      = false
       }]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/prometheus"
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
     },
 
     # Prometheus container
@@ -304,13 +290,13 @@ resource "aws_ecs_task_definition" "prometheus" {
       essential = true
       environment = []
       command   = [
-        "--config.file=/etc/prometheus/prometheus.yml",
+        "--config.file=/prometheus/prometheus.yml",
         "--storage.tsdb.path=/prometheus"
       ]
       mountPoints = [
         {
           sourceVolume  = "prometheus-storage"
-          containerPath = "etc/prometheus"
+          containerPath = "/prometheus"
           readOnly      = false
         }
       ]
